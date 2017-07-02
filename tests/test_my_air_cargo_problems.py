@@ -78,7 +78,7 @@ class TestAirCargoMethods(unittest.TestCase):
 
     def test_h_ignore_preconditions(self):
         n = Node(self.p1.initial)
-        self.assertEqual(self.p1.h_ignore_preconditions(n),2)
+        self.assertEqual(self.p1.h_ignore_preconditions(n), 2)
 
 if __name__ == '__main__':
     unittest.main()
