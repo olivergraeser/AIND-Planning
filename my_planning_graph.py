@@ -101,6 +101,9 @@ class PgNode_s(PgNode):
         self.__hash = self.__hash or hash(self.symbol) ^ hash(self.is_pos)
         return self.__hash
 
+    def __str__(self):
+        return '{}:{}'.format(self.symbol, self.is_pos)
+
 
 class PgNode_a(PgNode):
     """A-type (action) Planning Graph node - inherited from PgNode """
@@ -129,6 +132,9 @@ class PgNode_a(PgNode):
         self.effnodes = self.effect_s_nodes()
         self.is_persistent = self.prenodes == self.effnodes
         self.__hash = None
+
+    def __str__(self):
+        return '{}:{}'.format(self.action, self.is_persistent)
 
     def show(self):
         """helper print for debugging shows action plus counts of parents, children, siblings
@@ -303,6 +309,32 @@ class PlanningGraph():
         :return:
             adds A nodes to the current level in self.a_levels[level]
         """
+
+        pos_literal_expr = [_.symbol for _ in self.s_levels[-1] if _.is_pos]
+        neg_literal_expr = [_.symbol for _ in self.s_levels[-1] if not _.is_pos]
+
+        pga_set = set()
+        for action in self.all_actions:
+            if all([_ in pos_literal_expr for _ in action.precond_pos]) and all([_ in neg_literal_expr for _ in action.precond_neg]):
+                pga_set.add(PgNode_a(action))
+
+        for pga_node in pga_set:
+            parent_nodes = set()
+            for prenode in pga_node.prenodes:
+                for connectable_node in self.s_levels[-1]:
+                    if connectable_node == prenode:
+                        parent_nodes.add(connectable_node)
+                        connectable_node.children.add(pga_node)
+                        break
+                else:
+                    raise
+                pga_node.parents = parent_nodes
+
+        self.a_levels[level] = pga_set
+
+
+
+
         # TODO add action A level to the planning graph as described in the Russell-Norvig text
         # 1. determine what actions to add and create those PgNode_a objects
         # 2. connect the nodes to the previous S literal level

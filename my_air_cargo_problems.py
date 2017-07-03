@@ -144,11 +144,20 @@ class AirCargoProblem(Problem):
         :param action: Action applied
         :return: resulting state after action
         """
+        available_action_strings = ['{}{!s}'.format(_.name, _.args) for _ in self.actions(state=state)]
+        action_string = '{}{!s}'.format(action.name, action.args)
         decoded_state = decode_state(state=state, fluent_map=self.state_map)
         new_state = decoded_state
-        if action in self.actions(state=state):
+        if action_string in available_action_strings:
             new_state = FluentState([_ for _ in decoded_state.pos if _ not in action.effect_rem] + action.effect_add,
                                     [_ for _ in decoded_state.neg if _ not in action.effect_add] + action.effect_rem)
+        else:
+            raise Exception('wrong action: {}|{}, allowed_actions (in format <name|args|allowed.name==action.name'
+                            '|allowed.args==action.args|allowed==action>:\n{}'
+                            .format(action.name, action.args,
+                                    '\n'.join('<{}|{}|{}|{}|{}>'.format(_.name, _.args, _.name == action.name,
+                                                                        _.args == action.args, _ == action)
+                                              for _ in self.actions(state=state))))
         return encode_state(new_state, self.state_map)
 
     def goal_test(self, state: str) -> bool:
@@ -188,8 +197,10 @@ class AirCargoProblem(Problem):
         conditions by ignoring the preconditions required for an action to be
         executed.
         """
-        # TODO implement (see Russell-Norvig Ed-3 10.2.3  or Russell-Norvig Ed-2 11.2)
-        count = 0
+        negative_states = decode_state(node.state, self.state_map).neg
+        negative_state_strings = {'{}{!s}'.format(_.op, _.args) for _ in negative_states}
+        goal_state_strings = {'{}{!s}'.format(_.op, _.args) for _ in self.goal}
+        count = len(negative_state_strings.intersection(goal_state_strings))
         return count
 
 
