@@ -58,11 +58,16 @@ class PrintableProblem(InstrumentedProblem):
         return {'succs': self.succs, 'goal_tests': self.goal_tests, 'states': self.states, 'depth': self.maxlength}
 
 
-def run_search(problem, search_function, parameter=None):
+def run_search(problem, search_function, parameter=None, expansions_max=None, print_freq=None):
 
     try:
+        param_dict = {}
+        if expansions_max:
+            param_dict['expansions_max'] = expansions_max
+        if print_freq:
+            param_dict['print_freq'] = print_freq
         start = timer()
-        ip = PrintableProblem(problem)
+        ip = PrintableProblem(problem, **param_dict)
         if parameter is not None:
             node = search_function(ip, parameter)
         else:

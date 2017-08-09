@@ -329,9 +329,11 @@ class InstrumentedProblem(Problem):
 
     """Delegates to a problem, and keeps statistics."""
 
-    def __init__(self, problem):
+    def __init__(self, problem, expansions_max=100000, print_freq=5000):
         self.problem = problem
         self.succs = self.goal_tests = self.states = 0
+        self.expansions_max = expansions_max
+        self.print_freq = print_freq
         self.maxlength = 0
         self.found = None
 
@@ -341,21 +343,21 @@ class InstrumentedProblem(Problem):
 
     def actions(self, state):
         self.succs += 1
-        if self.succs % 1000 == 0:
+        if self.succs % self.print_freq == 0:
             self.print_stat()
-        if self.succs > 100000:
+        if self.succs > self.expansions_max:
             raise TooManyExpansionsException
         return self.problem.actions(state)
 
     def result(self, state, action):
         self.states += 1
-        if self.states % 1000 == 0:
+        if self.states % self.print_freq == 0:
             self.print_stat()
         return self.problem.result(state, action)
 
     def goal_test(self, state):
         self.goal_tests += 1
-        if self.goal_tests % 1000 == 0:
+        if self.goal_tests % self.print_freq == 0:
             self.print_stat()
         result = self.problem.goal_test(state)
         if result:
