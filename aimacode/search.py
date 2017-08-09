@@ -14,6 +14,8 @@ infinity = float('inf')
 
 # ______________________________________________________________________________
 
+class TooManyExpansionsException(Exception):
+    pass
 
 class Problem:
 
@@ -96,6 +98,7 @@ class Node:
 
     def expand(self, problem):
         "List the nodes reachable in one step from this node."
+        problem.maxlength = max(problem.maxlength, self.depth)
         return [self.child_node(problem, action)
                 for action in problem.actions(self.state)]
 
@@ -176,6 +179,13 @@ def depth_first_tree_search(problem):
 def depth_first_graph_search(problem):
     "Search the deepest nodes in the search tree first."
     return graph_search(problem, Stack())
+
+def depth_first_search(problem):
+    node = Node(problem.initial)
+    if problem.goal_test(node.state):
+        return node
+    frontier = FIFOQueue()
+    frontier.append(node)
 
 
 def breadth_first_search(problem):
@@ -322,18 +332,31 @@ class InstrumentedProblem(Problem):
     def __init__(self, problem):
         self.problem = problem
         self.succs = self.goal_tests = self.states = 0
+        self.maxlength = 0
         self.found = None
+
+    def print_stat(self):
+        print('\rExpansions: {}| Goals: {}| Nodes: {}| Depth: {}'
+              .format(self.succs, self.goal_tests, self.states, self.maxlength), end=' ')
 
     def actions(self, state):
         self.succs += 1
+        if self.succs % 1000 == 0:
+            self.print_stat()
+        if self.succs > 100000:
+            raise TooManyExpansionsException
         return self.problem.actions(state)
 
     def result(self, state, action):
         self.states += 1
+        if self.states % 1000 == 0:
+            self.print_stat()
         return self.problem.result(state, action)
 
     def goal_test(self, state):
         self.goal_tests += 1
+        if self.goal_tests % 1000 == 0:
+            self.print_stat()
         result = self.problem.goal_test(state)
         if result:
             self.found = state
