@@ -116,10 +116,13 @@ if __name__=="__main__":
                         help="Specify the indices of the problems to solve as a list of space separated values. Choose from: {!s}".format(list(range(1, len(PROBLEMS)+1))))
     parser.add_argument('-s', '--searches', nargs="+", choices=range(1, len(SEARCHES)+1), type=int, metavar='',
                         help="Specify the indices of the search algorithms to use as a list of space separated values. Choose from: {!s}".format(list(range(1, len(SEARCHES)+1))))
+    parser.add_argument('-a', '--all', action='store_true')
     args = parser.parse_args()
 
     if args.manual:
         manual()
+    elif args.all:
+        main(range(1, len(PROBLEMS)), range(1, len(SEARCHES)))
     elif args.problems and args.searches:
         main(list(sorted(set(args.problems))), list(sorted(set((args.searches)))))
     else:
