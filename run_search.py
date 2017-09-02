@@ -112,11 +112,11 @@ def manual():
                                                " ".join(s_choices)))
 
 
-def main(p_choices, s_choices):
+def main(p_choices, s_choices, outfile=None):
 
     problems = [PROBLEMS[i-1] for i in map(int, p_choices)]
     searches = [SEARCHES[i-1] for i in map(int, s_choices)]
-
+    resultlist = list()
     for pname, p in problems:
 
         for sname, s, h in searches:
@@ -125,7 +125,14 @@ def main(p_choices, s_choices):
 
             _p = p()
             _h = None if not h else getattr(_p, h)
-            run_search(_p, s, _h)
+            result = run_search(_p, s, _h)
+            result['problem'] = pname
+            result['search'] = sname
+            result['heuristic'] = hstring
+            resultlist.append(result)
+    if outfile:
+        with open(outfile, 'w') as f:
+            f.write(json.dumps(resultlist))
 
 def runall():
     resultlist = []
@@ -164,6 +171,8 @@ if __name__=="__main__":
                             list(range(1, len(SEARCHES) + 1))))
     parser.add_argument('-a', '--all', action="store_true",
                         help="Runs all possible combinations")
+    parser.add_argument('-o', '--outfile', type=str,
+                        help='define outfile to write json to')
     args = parser.parse_args()
 
     if args.manual:
@@ -171,7 +180,7 @@ if __name__=="__main__":
     elif args.all:
         runall()
     elif args.problems and args.searches:
-        main(list(sorted(set(args.problems))), list(sorted(set((args.searches)))))
+        main(list(sorted(set(args.problems))), list(sorted(set((args.searches)))), args.outfile)
     else:
         print()
         parser.print_help()
